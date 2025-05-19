@@ -31,8 +31,8 @@ RUN \
 # TODO not use node in producation
 RUN apk add --no-cache nodejs npm git
 
-COPY php/supervisord/supervisord.conf /etc/
-COPY php/entrypoint.sh /usr/local/bin/docker-php-entrypoint
+COPY dockerfiles/php/supervisord/supervisord.conf /etc/
+COPY dockerfiles/php/entrypoint.sh /usr/local/bin/docker-php-entrypoint
 RUN chmod +x /usr/local/bin/docker-php-entrypoint
 EXPOSE 8000
 

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": [
+    {
+      "name": "app-octane",
+      "builder": "dockerfile",
+      "dockerfilePath": "dockerfiles/php/dockerfile",
+      "buildContext": ".",
+      "startCommand": "supervisord --nodaemon --configuration /etc/supervisord.conf",
+      "healthcheckPath": "/up",
+      "healthcheckTimeout": 60,
+      "environment": {
+        "PROCESS": "app",
+        "COMMAND": "php artisan octane:start --host=0.0.0.0 --port=$PORT",
+        "APP_NAME": "Твоя Назва Додатку",
+        "APP_ENV": "production",
+        "APP_KEY": "base64:LtXeefr8s5iQEmtbRZrzvEPKwVXbc4dlo10F6bnt87c=",
+        "APP_DEBUG": "false",
+        "APP_URL": "",
+        "LOG_CHANNEL": "stderr",
+        "DB_CONNECTION": "pgsql",
+        "DB_HOST": "{{postgres.PGHOST}}",
+        "DB_PORT": "{{postgres.PGPORT}}",
+        "DB_DATABASE": "{{postgres.PGDATABASE}}",
+        "DB_USERNAME": "{{postgres.PGUSER}}",
+        "DB_PASSWORD": "{{postgres.PGPASSWORD}}",
+        "REDIS_HOST": "{{redis.REDISHOST}}",
+        "REDIS_PASSWORD": "{{redis.REDISPASSWORD}}",
+        "REDIS_PORT": "{{redis.REDISPORT}}",
+        "QUEUE_CONNECTION": "redis",
+        "WEATHER_API_KEY": ""
+      },
+      "domains": [
+        {
+          "host": "${{RAILWAY_SERVICE_NAME}}.up.railway.app",
+          "port": 80
+        }
+      ]
+    },
+    {
+      "name": "horizon-worker",
+      "builder": "dockerfile",
+      "dockerfilePath": "dockerfiles/php/dockerfile",
+      "buildContext": ".",
+      "startCommand": "supervisord --nodaemon --configuration /etc/supervisord.conf",
+      "environment": {
+        "PROCESS": "horizon",
+        "COMMAND": "php artisan horizon",
+        "APP_NAME": "Твоя Назва Додатку",
+        "APP_ENV": "production",
+        "APP_KEY": "base64:LtXeefr8s5iQEmtbRZrzvEPKwVXbc4dlo10F6bnt87c=",
+        "APP_DEBUG": "false",
+        "LOG_CHANNEL": "stderr",
+        "DB_CONNECTION": "pgsql",
+        "DB_HOST": "{{postgres.PGHOST}}",
+        "DB_PORT": "{{postgres.PGPORT}}",
+        "DB_DATABASE": "{{postgres.PGDATABASE}}",
+        "DB_USERNAME": "{{postgres.PGUSER}}",
+        "DB_PASSWORD": "{{postgres.PGPASSWORD}}",
+        "REDIS_HOST": "{{redis.REDISHOST}}",
+        "REDIS_PASSWORD": "{{redis.REDISPASSWORD}}",
+        "REDIS_PORT": "{{redis.REDISPORT}}",
+        "QUEUE_CONNECTION": "redis"
+      }
+    },
+    {
+      "name": "scheduler",
+      "builder": "dockerfile",
+      "dockerfilePath": "dockerfiles/php/dockerfile",
+      "buildContext": ".",
+      "startCommand": "supervisord --nodaemon --configuration /etc/supervisord.conf",
+      "environment": {
+        "PROCESS": "schedule",
+        "COMMAND": "supercronic -quiet /var/www/docker/php/schedule/crontab",
+        "APP_NAME": "Твоя Назва Додатку",
+        "APP_ENV": "production",
+        "APP_KEY": "base64:LtXeefr8s5iQEmtbRZrzvEPKwVXbc4dlo10F6bnt87c=",
+        "APP_DEBUG": "false",
+        "LOG_CHANNEL": "stderr",
+        "DB_CONNECTION": "pgsql",
+        "DB_HOST": "{{postgres.PGHOST}}",
+        "DB_PORT": "{{postgres.PGPORT}}",
+        "DB_DATABASE": "{{postgres.PGDATABASE}}",
+        "DB_USERNAME": "{{postgres.PGUSER}}",
+        "DB_PASSWORD": "{{postgres.PGPASSWORD}}",
+        "REDIS_HOST": "{{redis.REDISHOST}}",
+        "REDIS_PASSWORD": "{{redis.REDISPASSWORD}}",
+        "REDIS_PORT": "{{redis.REDISPORT}}",
+        "QUEUE_CONNECTION": "redis"
+      }
+    }
+  ]
+}

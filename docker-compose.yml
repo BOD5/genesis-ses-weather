@@ -21,8 +21,7 @@ services:
       retries: 10
   app: &app
     build:
-      context: ./dockerfiles
-      dockerfile: php/dockerfile
+      dockerfile: ./dockerfiles/php/dockerfile
     user: ${UID}:${GID}
     restart: unless-stopped
     container_name: ses-app
