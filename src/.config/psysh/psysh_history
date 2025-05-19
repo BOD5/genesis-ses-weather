@@ -1,0 +1,38 @@
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Mail\Mailable;
+class TestMailForMailhog extends Mailable {
+    public function build() {
+        return $this->html('<h1>Привіт від Laravel з MailHog!</h1>')
+                    ->subject('Тестовий лист для MailHog');
+    }
+}
+try {
+    Mail::to('any_email@example.com')->send(new TestMailForMailhog()); // Адреса тут не важлива
+    echo "Спроба відправки листа на MailHog ініційована.\n";
+} catch (Exception $e) {
+    echo "Помилка під час спроби відправки листа: " . $e->getMessage() . "\n";
+}
+// Всередині Tinker
+// НЕ ПОТРІБНО: use Illuminate\Support\Facades\Mail; (Mail фасад вже доступний)
+// НЕ ПОТРІБНО: use Illuminate\Mail\Mailable; (ми вкажемо повний шлях)
+class TestMailForMailhog extends \Illuminate\Mail\Mailable { // <--- Вказуємо повний шлях
+    public function build() {
+        return $this->html('<h1>Привіт від Laravel з MailHog!</h1>')
+                    ->subject('Тестовий лист для MailHog');
+    }
+}
+try {
+    \Illuminate\Support\Facades\Mail::to('any_email@example.com')->send(new TestMailForMailhog());
+    echo "Спроба відправки листа на MailHog ініційована.\n";
+} catch (Exception $e) {
+    echo "Помилка під час спроби відправки листа: " . $e->getMessage() . "\n";
+}
+exit;
+DB::table('jobs')->count();
+DB::table('failed_jobs')->orderByDesc('id')->first(); 
+exit;
+DB::table('jobs')->get();
+
+DB::table('failed_jobs')->orderByDesc('id')->get();
+
+exit;
