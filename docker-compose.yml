@@ -29,7 +29,6 @@ services:
       COMMAND: php artisan octane:start --watch --host=0.0.0.0 --port=8000
       CHOKIDAR_USEPOLLING: "true"
       PROCESS: app
-
       APP_NAME: "${APP_NAME}"
       APP_ENV: "${APP_ENV:-local}"
       APP_DEBUG: "${APP_DEBUG:-true}"
@@ -65,20 +64,20 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
-  horizon:
-    <<: *app
-    container_name: ses-horizon
-    environment:
-      COMMAND: php artisan horizon
-      PROCESS: horizon
-    networks:
-      - ses-db-network
-      - ses-redis-network
-    healthcheck:
-      test: php artisan horizon:status | grep -q 'is running' # TODO try spatie LARAVEL-HEALTH
-      interval: 5s
-      timeout: 10s
-      retries: 20
+  # horizon:
+  #   <<: *app
+  #   container_name: ses-horizon
+  #   environment:
+  #     COMMAND: php artisan horizon
+  #     PROCESS: horizon
+  #   networks:
+  #     - ses-db-network
+  #     - ses-redis-network
+  #   healthcheck:
+  #     test: php artisan horizon:status | grep -q 'is running' # TODO try spatie LARAVEL-HEALTH
+  #     interval: 5s
+  #     timeout: 10s
+  #     retries: 20
 
   schedule:
     <<: *app
