@@ -32,9 +32,10 @@ RUN \
 RUN apk add --no-cache nodejs npm git
 
 COPY php/supervisord/supervisord.conf /etc/
-
+COPY php/entrypoint.sh /usr/local/bin/docker-php-entrypoint
+RUN chmod +x /usr/local/bin/docker-php-entrypoint
 EXPOSE 8000
 
 WORKDIR "/var/www/"
-
-ENTRYPOINT ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]
+ENTRYPOINT ["docker-php-entrypoint"]
+CMD ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]
