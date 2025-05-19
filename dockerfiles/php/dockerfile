@@ -1,3 +1,10 @@
+FROM php:8.3.6-cli-alpine3.18 AS builder
+
+RUN apk add --no-cache nodejs npm git
+WORKDIR /app
+COPY ./src /app
+RUN npm ci && npm run build
+
 FROM php:8.3.6-cli-alpine3.18
 
 COPY --from=composer:2.7.4 /usr/bin/composer /usr/bin/
@@ -5,12 +12,10 @@ COPY --from=composer:2.7.4 /usr/bin/composer /usr/bin/
 RUN \
     set -ex && \
     apk update && \
-    apk add --no-cache libstdc++ libpq && \
+    apk add --no-cache libstdc++ libpq supervisor supercronic && \
     apk add --no-cache --virtual .build-deps $PHPIZE_DEPS curl-dev linux-headers postgresql-dev openssl-dev pcre-dev pcre2-dev zlib-dev && \
-    apk add --no-cache supervisor && \
-    apk add --no-cache supercronic && \
     pecl channel-update pecl.php.net && \
-    docker-php-ext-install sockets && \
+    docker-php-ext-install sockets pdo pdo_pgsql pgsql && \
     pecl install redis &&  \
     docker-php-ext-enable redis && \
     docker-php-source extract && \
@@ -28,12 +33,16 @@ RUN \
     docker-php-source delete && \
     apk del .build-deps
 
-# TODO not use node in producation
-RUN apk add --no-cache nodejs npm git
+RUN addgroup -S www && adduser -S -G www www
 
+COPY ./src /var/www
+COPY --from=builder /app/public /var/www/public
 COPY dockerfiles/php/supervisord/supervisord.conf /etc/
 COPY dockerfiles/php/entrypoint.sh /usr/local/bin/docker-php-entrypoint
-RUN chmod +x /usr/local/bin/docker-php-entrypoint
+RUN chmod +x /usr/local/bin/docker-php-entrypoint && \
+    chown -R www:www /var/www
+
+USER www
 EXPOSE 8000
 
 WORKDIR "/var/www/"

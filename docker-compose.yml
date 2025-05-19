@@ -12,8 +12,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     networks:
       - ses-db-network
-    ports:
-      - "${FORWARD_DB_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
       interval: 5s
@@ -22,17 +20,15 @@ services:
   app: &app
     build:
       dockerfile: ./dockerfiles/php/dockerfile
-    user: ${UID}:${GID}
     restart: unless-stopped
     container_name: ses-app
     environment:
-      COMMAND: php artisan octane:start --watch --host=0.0.0.0 --port=8000
-      CHOKIDAR_USEPOLLING: "true"
+      COMMAND: php artisan octane:start --host=0.0.0.0 --port=8000
       PROCESS: app
       APP_NAME: "${APP_NAME}"
-      APP_ENV: "${APP_ENV:-local}"
-      APP_DEBUG: "${APP_DEBUG:-true}"
-      APP_URL: "${APP_URL:-http://localhost}"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: "${APP_URL}"
 
       DB_CONNECTION: "${DB_CONNECTION}"
       DB_HOST: "${DB_HOST}"
@@ -52,7 +48,7 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./src:/var/www:delegated
+      - app_public:/var/www/public
       - ses_app_composer_data:/.composer
       - ses_app_npm_data:/.npm
     networks:
@@ -64,20 +60,6 @@ services:
       interval: 5s
       timeout: 10s
       retries: 20
-  # horizon:
-  #   <<: *app
-  #   container_name: ses-horizon
-  #   environment:
-  #     COMMAND: php artisan horizon
-  #     PROCESS: horizon
-  #   networks:
-  #     - ses-db-network
-  #     - ses-redis-network
-  #   healthcheck:
-  #     test: php artisan horizon:status | grep -q 'is running' # TODO try spatie LARAVEL-HEALTH
-  #     interval: 5s
-  #     timeout: 10s
-  #     retries: 20
 
   schedule:
     <<: *app
@@ -85,11 +67,13 @@ services:
     environment:
       COMMAND: supercronic -quiet /var/www/docker/php/schedule/crontab
       PROCESS: schedule
+      APP_ENV: production
+      APP_DEBUG: "false"
     networks:
       - ses-db-network
       - ses-redis-network
     healthcheck:
-      test: supercronic -test /var/www/docker/php/schedule/crontab | grep -q 'is valid' # TODO try spatie LARAVEL-HEALTH
+      test: supercronic -test /var/www/docker/php/schedule/crontab | grep -q 'is valid'
       interval: 5s
       timeout: 10s
       retries: 2
@@ -99,13 +83,16 @@ services:
     container_name: ses-webserver
     restart: unless-stopped
     volumes:
-      - ./src:/var/www
+      - app_public:/var/www/public:ro
       - ./dockerfiles/nginx/conf.d/:/etc/nginx/conf.d/
       - ./storage/logs/nginx/:/var/log/nginx/
     ports:
       - 80:80
     networks:
       - ses-webserver-network
+    depends_on:
+      app:
+        condition: service_healthy
     healthcheck:
       test: curl -s http://localhost/up >/dev/null || exit 1
       interval: 5s
@@ -129,17 +116,6 @@ services:
       timeout: 10s
       retries: 20
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
-    restart: unless-stopped
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-    networks:
-      - ses-webserver-network
-      - ses-redis-network
-
 volumes:
   db_data:
     driver: local
@@ -152,7 +128,10 @@ volumes:
     name: ses_app_composer_data
   ses_app_npm_data:
     driver: local
-    name: ses_app_composer_data
+    name: ses_app_npm_data
+  app_public:
+    driver: local
+    name: ses_app_public
 
 networks:
   ses-db-network:
